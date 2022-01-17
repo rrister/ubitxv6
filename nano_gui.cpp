@@ -578,5 +578,3 @@ void setupTouch(){
   writeTouchCalibration();
   displayClear(DISPLAY_BLACK);
 }
-
-

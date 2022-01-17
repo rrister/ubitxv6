@@ -1,7 +1,15 @@
+/*N8LOV Mods
+   20210107 - Change freq limit defines and use them in ubitx_ui.  Add Tx freq limits.  Add inhibitTx.
+   20210108 - Add display defines
+   20210109 - Add clearCommandbar
+   20210113 - Add define for CW_MODE address in EEPROM
+   20210713 - Add oneKhzOn.
+   20220114 - Add bandSelectOn.
+*/
 
-/* The ubitx is powered by an arduino nano. The pin assignment is as folows 
- *  
- */
+/* The ubitx is powered by an arduino nano. The pin assignment is as follows
+
+*/
 
 #define ENC_A (A0)          // Tuning encoder interface
 #define ENC_B (A1)          // Tuning encoder interface
@@ -16,28 +24,28 @@
 #define TX_LPF_B (4)        //  ...Alternatively, either 3.5 MHz, 7 MHz or 14 Mhz LPFs are...
 #define TX_LPF_C (3)        //  ...switched inline depending upon the TX frequency
 #define CW_KEY (2)          //  Pin goes high during CW keydown to transmit the carrier. 
-                            // ... The CW_KEY is needed in addition to the TX/RX key as the...
-                            // ...key can be up within a tx period
+// ... The CW_KEY is needed in addition to the TX/RX key as the...
+// ...key can be up within a tx period
 
 
 /** pin assignments
-14  T_IRQ           2 std   changed
-13  T_DOUT              (parallel to SOD/MOSI, pin 9 of display)
-12  T_DIN               (parallel to SDI/MISO, pin 6 of display)
-11  T_CS            9   (we need to specify this)
-10  T_CLK               (parallel to SCK, pin 7 of display)
-9   SDO(MSIO) 12    12  (spi)
-8   LED       A0    8   (not needed, permanently on +3.3v) (resistor from 5v, 
-7   SCK       13    13  (spi)
-6   SDI       11    11  (spi)
-5   D/C       A3    7   (changable)
-4   RESET     A4    9 (not needed, permanently +5v)
-3   CS        A5    10  (changable)
-2   GND       GND
-1   VCC       VCC
+  14  T_IRQ           2 std   changed
+  13  T_DOUT              (parallel to SOD/MOSI, pin 9 of display)
+  12  T_DIN               (parallel to SDI/MISO, pin 6 of display)
+  11  T_CS            9   (we need to specify this)
+  10  T_CLK               (parallel to SCK, pin 7 of display)
+  9   SDO(MSIO) 12    12  (spi)
+  8   LED       A0    8   (not needed, permanently on +3.3v) (resistor from 5v,
+  7   SCK       13    13  (spi)
+  6   SDI       11    11  (spi)
+  5   D/C       A3    7   (changable)
+  4   RESET     A4    9 (not needed, permanently +5v)
+  3   CS        A5    10  (changable)
+  2   GND       GND
+  1   VCC       VCC
 
-The model is called tjctm24028-spi
-it uses an ILI9341 display controller and an  XPT2046 touch controller.
+  The model is called tjctm24028-spi
+  it uses an ILI9341 display controller and an  XPT2046 touch controller.
 */
 
 #define TFT_DC  9
@@ -50,34 +58,34 @@ it uses an ILI9341 display controller and an  XPT2046 touch controller.
 //Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
 /**
- * The Arduino, unlike C/C++ on a regular computer with gigabytes of RAM, has very little memory.
- * We have to be very careful with variables that are declared inside the functions as they are 
- * created in a memory region called the stack. The stack has just a few bytes of space on the Arduino
- * if you declare large strings inside functions, they can easily exceed the capacity of the stack
- * and mess up your programs. 
- * We circumvent this by declaring a few global buffers as  kitchen counters where we can 
- * slice and dice our strings. These strings are mostly used to control the display or handle
- * the input and output from the USB port. We must keep a count of the bytes used while reading
- * the serial port as we can easily run out of buffer space. This is done in the serial_in_count variable.
- */
-extern char c[30], b[30];      
-extern char printBuff[2][20];  //mirrors what is showing on the two lines of the display
-extern int count;          //to generally count ticks, loops, etc
+   The Arduino, unlike C/C++ on a regular computer with gigabytes of RAM, has very little memory.
+   We have to be very careful with variables that are declared inside the functions as they are
+   created in a memory region called the stack. The stack has just a few bytes of space on the Arduino
+   if you declare large strings inside functions, they can easily exceed the capacity of the stack
+   and mess up your programs.
+   We circumvent this by declaring a few global buffers as  kitchen counters where we can
+   slice and dice our strings. These strings are mostly used to control the display or handle
+   the input and output from the USB port. We must keep a count of the bytes used while reading
+   the serial port as we can easily run out of buffer space. This is done in the serial_in_count variable.
+*/
+extern char c[30], b[30];
+//extern char printBuff[2][20];  //mirrors what is showing on the two lines of the display
+//extern int count;          //to generally count ticks, loops, etc
 
-/** 
- *  The second set of 16 pins on the Raduino's bottom connector are have the three clock outputs and the digital lines to control the rig.
- *  This assignment is as follows :
- *    Pin   1   2    3    4    5    6    7    8    9    10   11   12   13   14   15   16
- *         GND +5V CLK0  GND  GND  CLK1 GND  GND  CLK2  GND  D2   D3   D4   D5   D6   D7  
- *  These too are flexible with what you may do with them, for the Raduino, we use them to :
- *  - TX_RX line : Switches between Transmit and Receive after sensing the PTT or the morse keyer
- *  - CW_KEY line : turns on the carrier for CW
- */
+/**
+    The second set of 16 pins on the Raduino's bottom connector are have the three clock outputs and the digital lines to control the rig.
+    This assignment is as follows :
+      Pin   1   2    3    4    5    6    7    8    9    10   11   12   13   14   15   16
+           GND +5V CLK0  GND  GND  CLK1 GND  GND  CLK2  GND  D2   D3   D4   D5   D6   D7
+    These too are flexible with what you may do with them, for the Raduino, we use them to :
+    - TX_RX line : Switches between Transmit and Receive after sensing the PTT or the morse keyer
+    - CW_KEY line : turns on the carrier for CW
+*/
 
 
 /**
- * These are the indices where these user changable settinngs are stored  in the EEPROM
- */
+   These are the indices where these user changable settinngs are stored  in the EEPROM
+*/
 #define MASTER_CAL 0
 #define LSB_CAL 4
 #define USB_CAL 8
@@ -99,49 +107,62 @@ extern int count;          //to generally count ticks, loops, etc
 #define VFO_A_MODE  256 // 2: LSB, 3: USB
 #define VFO_B_MODE  257
 
-//values that are stroed for the VFO modes
+#define CW_MODE 258 // N8LOV
+#define VFO_A_CW_MODE 258 // N8LOV
+#define VFO_B_CW_MODE 259 // N8LOV
+
+//values that are stored for the VFO modes
 #define VFO_MODE_LSB 2
 #define VFO_MODE_USB 3
+
+
 
 // handkey, iambic a, iambic b : 0,1,2f
 #define CW_KEY_TYPE 358
 
 /**
- * The uBITX is an upconnversion transceiver. The first IF is at 45 MHz.
- * The first IF frequency is not exactly at 45 Mhz but about 5 khz lower,
- * this shift is due to the loading on the 45 Mhz crystal filter by the matching
- * L-network used on it's either sides.
- * The first oscillator works between 48 Mhz and 75 MHz. The signal is subtracted
- * from the first oscillator to arriive at 45 Mhz IF. Thus, it is inverted : LSB becomes USB
- * and USB becomes LSB.
- * The second IF of 11.059 Mhz has a ladder crystal filter. If a second oscillator is used at 
- * 56 Mhz (appox), the signal is subtracted FROM the oscillator, inverting a second time, and arrives 
- * at the 11.059 Mhz ladder filter thus doouble inversion, keeps the sidebands as they originally were.
- * If the second oscillator is at 33 Mhz, the oscilaltor is subtracated from the signal, 
- * thus keeping the signal's sidebands inverted. The USB will become LSB.
- * We use this technique to switch sidebands. This is to avoid placing the lsbCarrier close to
- * 11 MHz where its fifth harmonic beats with the arduino's 16 Mhz oscillator's fourth harmonic
- */
+   The uBITX is an upconnversion transceiver. The first IF is at 45 MHz.
+   The first IF frequency is not exactly at 45 Mhz but about 5 khz lower,
+   this shift is due to the loading on the 45 Mhz crystal filter by the matching
+   L-network used on it's either sides.
+   The first oscillator works between 48 Mhz and 75 MHz. The signal is subtracted
+   from the first oscillator to arriive at 45 Mhz IF. Thus, it is inverted : LSB becomes USB
+   and USB becomes LSB.
+   The second IF of 11.059 Mhz has a ladder crystal filter. If a second oscillator is used at
+   56 Mhz (appox), the signal is subtracted FROM the oscillator, inverting a second time, and arrives
+   at the 11.059 Mhz ladder filter thus doouble inversion, keeps the sidebands as they originally were.
+   If the second oscillator is at 33 Mhz, the oscilaltor is subtracated from the signal,
+   thus keeping the signal's sidebands inverted. The USB will become LSB.
+   We use this technique to switch sidebands. This is to avoid placing the lsbCarrier close to
+   11 MHz where its fifth harmonic beats with the arduino's 16 Mhz oscillator's fourth harmonic
+*/
 
 #define INIT_USB_FREQ   (11059200l)
-// limits the tuning and working range of the ubitx between 3 MHz and 30 MHz
-#define LOWEST_FREQ   (100000l)
-#define HIGHEST_FREQ (30000000l)
+// limits the tuning range of the ubitx
+#define LOWEST_FREQ   (100000l) // N8LOV - (cover 2200 M band bottom)
+#define HIGHEST_FREQ (30000000l) // N8LOV - (cover 10M band top)
+// limits the transmit range of the ubitx
+#define LOWEST_TX_FREQ   (3450000l) // N8LOV - (cover bottom of 80M band)
+#define HIGHEST_TX_FREQ (30000000l) // N8LOV - (cover top of 10M band)
 
 //we directly generate the CW by programmin the Si5351 to the cw tx frequency, hence, both are different modes
 //these are the parameter passed to startTx
 #define TX_SSB 0
 #define TX_CW 1
 
-extern char ritOn;
+extern bool bandSelectOn; // N8LOV - true indicates band selection mode is on (active)
+extern bool inhibitTx; // N8LOV - true is inhibit/ false is don't inhibit
+extern bool ritOn;
 extern char vfoActive;
 extern unsigned long vfoA, vfoB, sideTone, usbCarrier;
-extern char isUsbVfoA, isUsbVfoB;
-extern unsigned long frequency, ritRxFrequency, ritTxFrequency;  //frequency is the current frequency on the dial
+extern bool isUsbVfoA, isUsbVfoB;
+extern unsigned long frequency  /* -RIT , ritRxFrequency, ritTxFrequency  -RIT */;  //frequency is the current frequency on the dial
 extern unsigned long firstIF;
 
 // if cwMode is flipped on, the rx frequency is tuned down by sidetone hz instead of being zerobeat
-extern int cwMode;
+extern bool cwMode; // N8LOV - the current cwMode
+extern bool vfoAcwMode; // N8LOV
+extern bool vfoBcwMode; // N8LOV
 
 
 //these are variables that control the keyer behaviour
@@ -153,33 +174,38 @@ extern bool Iambic_Key;
 #define IAMBICB 0x10 // 0 for Iambic A, 1 for Iambic B
 extern unsigned char keyerControl;
 //during CAT commands, we will freeeze the display until CAT is disengaged
-extern unsigned char doingCAT;
+extern bool doingCAT;
 
 
 /**
- * Raduino needs to keep track of current state of the transceiver. These are a few variables that do it
- */
-extern boolean txCAT;        //turned on if the transmitting due to a CAT command
-extern char inTx;                //it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
-extern int splitOn;             //working split, uses VFO B as the transmit frequency
-extern char keyDown;             //in cw mode, denotes the carrier is being transmitted
-extern char isUSB;               //upper sideband was selected, this is reset to the default for the 
-                              //frequency when it crosses the frequency border of 10 MHz
+   Raduino needs to keep track of current state of the transceiver. These are a few variables that do it
+*/
+extern bool txCAT;        //turned on if the transmitting due to a CAT command
+extern bool inTx;                //it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
+extern bool splitOn;             //working split, uses VFO B as the transmit frequency
+extern bool oneKhzOn; // N8LOV - true sets frequency adjustment by 1khz using knob (to support split freq)/ false is normal frequency adjustment by knob
+extern bool keyDown;             //in cw mode, denotes the carrier is being transmitted
+extern bool isUSB;               //upper sideband was selected, this is reset to the default for the
+//frequency when it crosses the frequency border of 10 MHz
 extern byte menuOn;              //set to 1 when the menu is being displayed, if a menu item sets it to zero, the menu is exited
 extern unsigned long cwTimeout;  //milliseconds to go before the cw transmit line is released and the radio goes back to rx mode
 extern unsigned long dbgCount;   //not used now
 extern unsigned char txFilter ;   //which of the four transmit filters are in use
-extern boolean modeCalibrate;//this mode of menus shows extended menus to calibrate the oscillators and choose the proper
-                              //beat frequency
+extern bool modeCalibrate;//this mode of menus shows extended menus to calibrate the oscillators and choose the proper
+//beat frequency
 
 /* these are functions implemented in the main file named as ubitx_xxx.ino */
 void active_delay(int delay_by);
-void saveVFOs();
+//void saveVFOs();
+void saveVFO(); // N8LOV - save active VFO info to EEPROM
+void recallVFO();  // N8LOV - recall the active VFO info from EEPROM
 void setFrequency(unsigned long f);
 void startTx(byte txMode);
 void stopTx();
+/* -RIT
 void ritEnable(unsigned long f);
 void ritDisable();
+-RIT */
 void checkCAT();
 void cwKeyer(void);
 void switchVFO(int vfoSelect);
@@ -187,17 +213,48 @@ void switchVFO(int vfoSelect);
 int enc_read(void); // returns the number of ticks in a short interval, +ve in clockwise, -ve in anti-clockwise
 int btnDown(); //returns true if the encoder button is pressed
 
+// N8LOV - Add defines for display
+// Pixel positions within the 240X320 display start at 0,0 in upper left corner
+//  Pixel positions for top edge of rows
+#define ROW1_Y (1) // VFOs
+#define ROW2_Y (40) // Command Bar
+#define ROW3_Y (80) // Button row 1
+#define ROW4_Y (120) // Button row 2
+#define ROW5_Y (160) // Button row 3
+#define ROW6_Y (200) // Status
+//  Pixel positions for left edge of columns
+#define COL1_X (0)
+#define COL2_X (64)
+#define COL3_X (128)
+#define COL4_X (192)
+#define COL5_X (256)
+//
+#define VFOA_X 0
+#define VFOB_X 160
+#define VFO_W (159)
+#define VFO_H (36)
+//
+#define CMDBAR_X (0)
+//
+#define BTN_W (60)
+#define BTN_H (36)
+//
+#define FULL_W (320)
+
+
+
 /* these functions are called universally to update the display */
 void updateDisplay(); //updates just the VFO frequency to show what is in 'frequency' variable
 void redrawVFOs();    //redraws only the changed digits of the vfo
 void guiUpdate();     //repaints the entire screen. Slow!!
+void clearCommandbar(); // N8LOV
 void drawCommandbar(char *text);
 void drawTx();
-//getValueByKnob() provides a reusable dialog box to get a value from the encoder, the prefix and postfix 
+//getValueByKnob() provides a reusable dialog box to get a value from the encoder, the prefix and postfix
 //are useful to concatanate the values with text like "Set Freq to " x " KHz"
 int getValueByKnob(int minimum, int maximum, int step_size,  int initial, char* prefix, char *postfix);
 
-//functions of the setup menu. implemented in seteup.cpp
+//functions of the setup menu. implemented in setup.cpp
 void doSetup2(); //main setup function, displays the setup menu, calls various dialog boxes
 void setupBFO();
 void setupFreq();
@@ -214,9 +271,11 @@ int enc_read(void);
 //main functions to check if any button is pressed and other user interface events
 void doCommands();  //does the commands with encoder to jump from button to button
 void  checkTouch(); //does the commands with a touch on the buttons
+void setBandFreq(unsigned long, int); // sets the frequency when in band selection mode
+void toggleBandSelect();
 
 
 /* these are functiosn implemented in ubitx_si5351.cpp */
 void si5351bx_setfreq(uint8_t clknum, uint32_t fout);
 void initOscillators();
-void si5351_set_calibration(int32_t cal); //calibration is a small value that is nudged to make up for the inaccuracies of the reference 25 MHz crystal frequency 
+void si5351_set_calibration(int32_t cal); //calibration is a small value that is nudged to make up for the inaccuracies of the reference 25 MHz crystal frequency
