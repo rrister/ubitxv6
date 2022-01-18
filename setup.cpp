@@ -95,7 +95,7 @@ void setupBFO() {
 
   displayDialog("Set BFO", "Touch screen to Save");
 
-  usbCarrier = 11053000l;
+  if (usbCarrier > 11069000l || usbCarrier < 11049000l) usbCarrier = 11053000l; // N8LOV - use current unless out of rangeif 
   si5351bx_setfreq(0, usbCarrier);
   printCarrierFreq(usbCarrier);
 
@@ -114,7 +114,7 @@ void setupBFO() {
     active_delay(100);
   }
 
-  EEPROM.put(USB_CAL, usbCarrier);
+  if (prevCarrier != usbCarrier) EEPROM.put(USB_CAL, usbCarrier); // N8LOV - save it if it has changed
   si5351bx_setfreq(0, usbCarrier);
   setFrequency(frequency);
   updateDisplay();

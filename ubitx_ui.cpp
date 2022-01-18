@@ -752,7 +752,7 @@ void sidebandToggle(struct Button *b) {
      isUsbVfoA = isUSB;
   else 
      isUsbVfoB = isUSB;
-  if (cwMode) setFrequency(frequency); // update cw receive freq
+  setFrequency(frequency);
   
 }
 
@@ -780,11 +780,16 @@ void redrawVFOs() {
   btnDraw(&b);
 }
 
+static int enccnt = 0;
 
 // N8LOV - Sets the frequency/USB/LSB/CW info into the active vfo when selecting band
-// dir < 0, go lower in freq, else go higher in freq
+// dir is the encoder value.
+// dir < 0 (counter clock-wise), go lower in freq, else go higher in freq.
 void setBandFreq(unsigned long f, int dir) {
-  if (dir==0) return;
+  // Make encoder knob less sensitive so greater travel is needed to switch bands
+  enccnt += dir;
+  if (abs(enccnt) < 4) return; else enccnt = 0;
+
   // Find nearest band frequency in direction
   struct Freq fr;
   char i = 0;
@@ -845,6 +850,7 @@ void setBandFreq(unsigned long f, int dir) {
 }
 
 void toggleBandSelect(){
+  enccnt = 50; // force band select after toggle
 
   // Disable Split
   if (!bandSelectOn && splitOn) {
@@ -862,17 +868,14 @@ void toggleBandSelect(){
   btnDraw(&bttn);
   
   if (bandSelectOn) {
-    // Change border to show active  
-    //displayRect(bttn.x, bttn.y, bttn.w , bttn.h, DISPLAY_YELLOW);
 
     setBandFreq(frequency, 1); // set radio freq/SB/CW and update vfo
     
   } else {
     clearCommandbar();
 
-    // Restore Button border
-    //displayRect(bttn.x, bttn.y, bttn.w , bttn.h, DISPLAY_DARKGREY);
   }
+
   return;
 }
 

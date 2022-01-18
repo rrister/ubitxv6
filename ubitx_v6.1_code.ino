@@ -493,8 +493,8 @@ void setFrequency(unsigned long f) {
   //N8LOV - simplify code, save 80 bytes program storage
   // set 2 to firstIF + f, add/subtract sideTone if cwMode
   si5351bx_setfreq(2, firstIF  + f + (cwMode ? (isUSB ? -sideTone : sideTone) : 0));
-  // set 1 to firstIF, add usbCarrier if USB, else subtract usbCarrier
-  si5351bx_setfreq(1, firstIF + (isUSB ? usbCarrier : -usbCarrier));
+  // set 1 to firstIF, subtract usbCarrier if USB, else add usbCarrier
+  si5351bx_setfreq(1, firstIF + (isUSB ? -usbCarrier : usbCarrier));
 
   frequency = f;
 }
